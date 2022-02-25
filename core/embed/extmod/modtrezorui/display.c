@@ -144,6 +144,24 @@ void display_bar(int x, int y, int w, int h, uint16_t c) {
   PIXELDATA_DIRTY();
 }
 
+void display_buffer(int x, int y, int w, int h, uint16_t *c) {
+  // x += DISPLAY_OFFSET.x;
+  // y += DISPLAY_OFFSET.y;
+  // int x0 = 0, y0 = 0, x1 = 0, y1 = 0;
+  // clamp_coords(x, y, w, h, &x0, &y0, &x1, &y1);
+  display_set_window(x, y, x+w, y+h);
+  for (int i = 0; i < (w+ 1) * (h + 1); i++) {
+    PIXELDATA(*c);
+    c++;
+  }
+  PIXELDATA_DIRTY();
+}
+
+void display_init_ex(void)
+{
+  display_init();
+}
+
 #define CORNER_RADIUS 16
 
 static const uint8_t cornertable[CORNER_RADIUS * CORNER_RADIUS] = {

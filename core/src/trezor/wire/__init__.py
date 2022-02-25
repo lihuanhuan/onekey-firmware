@@ -442,6 +442,7 @@ async def handle_session(
 
 def _find_handler_placeholder(iface: WireInterface, msg_type: int) -> Handler | None:
     """Placeholder handler lookup before a proper one is registered."""
+    log.debug(__name__,"find handler")
     return None
 
 

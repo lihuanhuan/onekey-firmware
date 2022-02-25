@@ -33,10 +33,10 @@
 #define TOUCH_OFFSET_X 110
 #define TOUCH_OFFSET_Y 40
 #else
-#define WINDOW_WIDTH 400
-#define WINDOW_HEIGHT 600
-#define TOUCH_OFFSET_X 80
-#define TOUCH_OFFSET_Y 110
+#define WINDOW_WIDTH 480
+#define WINDOW_HEIGHT 800
+#define TOUCH_OFFSET_X 0
+#define TOUCH_OFFSET_Y 0
 #endif
 
 #elif TREZOR_MODEL == 1
@@ -152,7 +152,7 @@ void display_init(void) {
 #if TREZOR_MODEL == T
 #include "background_T.h"
   BACKGROUND = IMG_LoadTexture_RW(
-      RENDERER, SDL_RWFromMem(background_T_jpg, background_T_jpg_len), 0);
+      RENDERER, SDL_RWFromMem(background_T_jpg, background_T_jpg_len*0), 0);
 #elif TREZOR_MODEL == 1
 #include "background_1.h"
   BACKGROUND = IMG_LoadTexture_RW(

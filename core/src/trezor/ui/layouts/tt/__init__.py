@@ -1,7 +1,7 @@
 from micropython import const
 from ubinascii import hexlify
 
-from trezor import ui, wire
+from trezor import ui, wire, log, loop
 from trezor.enums import ButtonRequestType
 from trezor.ui.container import Container
 from trezor.ui.loader import LoaderDanger
@@ -36,6 +36,8 @@ from ...constants.tt import (
     TEXT_MAX_LINES,
 )
 from ..common import button_request, interact
+
+from trezor.ui import lvgl_ui
 
 if False:
     from typing import Awaitable, Iterable, Iterator, NoReturn, Sequence
@@ -154,7 +156,7 @@ async def confirm_reset_device(
     text.normal("By continuing you agree")
     text.br()
     text.normal("to ")
-    text.bold("https://trezor.io/tos")
+    text.bold("https://trezor.io/tos")        
     await raise_if_cancelled(
         interact(
             ctx,
@@ -165,6 +167,34 @@ async def confirm_reset_device(
             else ButtonRequestType.ResetDevice,
         )
     )
+
+
+async def confirm_response(screen):
+    while True:
+            if screen.cancel:
+                raise wire.ActionCancelled
+            if screen.confirm:
+                return
+            else:
+                await loop.sleep(10)
+    
+
+async def confirm_reset_device_lvgl(
+    ctx: wire.GenericContext, prompt: str, recovery: bool = False
+) -> None:
+    if recovery:
+        ui_reset = lvgl_ui.UiResetDevice("Recovery mode",prompt)
+    else:
+        ui_reset = lvgl_ui.UiResetDevice("Create new wallet",prompt)
+        
+    await button_request(
+            ctx, 
+            "recover_device" if recovery else "setup_device",
+            ButtonRequestType.ProtectCall
+            if recovery
+            else ButtonRequestType.ResetDevice,
+        )
+    return await ctx.wait(confirm_response(ui_reset))
 
 
 # TODO cleanup @ redesign
@@ -197,6 +227,27 @@ async def confirm_backup(ctx: wire.GenericContext) -> bool:
             ButtonRequestType.ResetDevice,
         )
     )
+    return confirmed
+
+
+async def confirm_ack(screen)-> bool:
+    while True:
+            if screen.cancel:
+                return False
+            if screen.confirm:
+                return True
+            else:
+                await loop.sleep(10)
+
+
+async def confirm_backup_lvgl(ctx: wire.GenericContext) -> bool:
+    ui_backup = lvgl_ui.UiBackUp(
+        "New wallet created successfully!",
+        "You should back up your new wallet right now."
+        )
+
+    confirmed = await confirm_ack(ui_backup)
+    
     return confirmed
 
 

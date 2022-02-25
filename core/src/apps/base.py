@@ -216,6 +216,24 @@ def set_homescreen() -> None:
         workflow.set_default(homescreen)
 
 
+def set_homescreen_lvgl() -> None:
+    from trezor.ui import lvgl_ui
+    if storage.device.is_initialized() and storage.device.no_backup():
+        dev_state = "SEEDLESS"        
+    elif storage.device.is_initialized() and storage.device.unfinished_backup():
+        dev_state = "BACKUP FAILED!"
+    elif storage.device.is_initialized() and storage.device.needs_backup():
+        dev_state = "NEEDS BACKUP!"
+    elif storage.device.is_initialized() and not config.has_pin():
+        dev_state = "PIN NOT SET!"
+    elif storage.device.get_experimental_features():
+        dev_state = "EXPERIMENTAL MODE!"
+    else:
+        dev_state = None
+
+    ui_home = lvgl_ui.UiHomescreen(dev_state)
+
+
 def lock_device() -> None:
     if config.has_pin():
         config.lock()

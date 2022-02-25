@@ -4,16 +4,23 @@ from micropython import const
 import storage
 import storage.cache
 import storage.device
-from trezor import config, ui
+from trezor import config, ui ,loop
 from trezor.ui.loader import Loader, LoaderNeutral
+from trezor import log
 
 from apps.base import lock_device
 
+from trezor.ui import lvgl_ui
 from . import HomescreenBase
+from trezorui import Display
+
+# all rendering is done through a singleton of `Display`
+display = Display()
+
+import lvgl as lv
 
 _LOADER_DELAY_MS = const(500)
 _LOADER_TOTAL_MS = const(2500)
-
 
 async def homescreen() -> None:
     await Homescreen()
@@ -36,24 +43,36 @@ class Homescreen(HomescreenBase):
         )
         self.touch_ms: int | None = None
 
-    def do_render(self) -> None:
-        # warning bar on top
-        if storage.device.is_initialized() and storage.device.no_backup():
-            ui.header_error("SEEDLESS")
-        elif storage.device.is_initialized() and storage.device.unfinished_backup():
-            ui.header_error("BACKUP FAILED!")
-        elif storage.device.is_initialized() and storage.device.needs_backup():
-            ui.header_warning("NEEDS BACKUP!")
-        elif storage.device.is_initialized() and not config.has_pin():
-            ui.header_warning("PIN NOT SET!")
-        elif storage.device.get_experimental_features():
-            ui.header_warning("EXPERIMENTAL MODE!")
-        else:
-            ui.display.bar(0, 0, ui.WIDTH, ui.HEIGHT, ui.BG)
+    # async def __iter__(self) -> None:
+    #     while True:
+    #         lv.tick_inc(10)        
+    #         # log.debug(__name__, "handler render1")
+    #         await loop.sleep(10)
+    #         lv.timer_handler()
+    #         display.refresh()
 
-        # homescreen with shifted avatar and text on bottom
-        ui.display.avatar(48, 48 - 10, self.get_image(), ui.WHITE, ui.BLACK)
-        ui.display.text_center(ui.WIDTH // 2, 220, self.label, ui.BOLD, ui.FG, ui.BG)
+    def do_render(self) -> None:
+        if False:
+            # warning bar on top
+            if storage.device.is_initialized() and storage.device.no_backup():
+                ui.header_error("SEEDLESS")
+            elif storage.device.is_initialized() and storage.device.unfinished_backup():
+                ui.header_error("BACKUP FAILED!")
+            elif storage.device.is_initialized() and storage.device.needs_backup():
+                ui.header_warning("NEEDS BACKUP!")
+            elif storage.device.is_initialized() and not config.has_pin():
+                ui.header_warning("PIN NOT SET!")
+            elif storage.device.get_experimental_features():
+                ui.header_warning("EXPERIMENTAL MODE!")
+            else:
+                ui.display.bar(0, 0, ui.WIDTH, ui.HEIGHT, ui.BG)
+
+            # homescreen with shifted avatar and text on bottom
+            ui.display.avatar(48, 48 - 10, self.get_image(), ui.WHITE, ui.BLACK)
+            ui.display.text_center(ui.WIDTH // 2, 220, self.label, ui.BOLD, ui.FG, ui.BG)
+        else:
+            ui_home = lvgl_ui.UiHomescreen()
+            log.debug(__name__, "ui home: %s", ui_home)
 
     def on_touch_start(self, _x: int, _y: int) -> None:
         if self.loader.start_ms is not None:

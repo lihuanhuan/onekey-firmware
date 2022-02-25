@@ -51,6 +51,11 @@
 #include "py/runtime.h"
 #include "py/stackctrl.h"
 
+// #include "lvgl.h"
+// #include "lv_port_disp.h"
+// #include "lv_port_indev.h"
+#include "display.h"
+
 #include "common.h"
 
 // Command line options, with their defaults
@@ -474,6 +479,21 @@ MP_NOINLINE int main_(int argc, char **argv) {
   // catch EPIPE themselves.
   signal(SIGPIPE, SIG_IGN);
 #endif
+
+  display_clear();
+  display_backlight(250);
+  
+  // lv_init();
+  // lv_port_disp_init();
+  // lv_port_indev_init();
+
+  // while (1)
+  // {
+  //   lv_tick_inc(5);
+  //   lv_timer_handler();
+  //   display_refresh();
+  //   hal_delay(5);
+  // }
 
   mp_stack_set_limit(600000 * (sizeof(void *) / 4));
 

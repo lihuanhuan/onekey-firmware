@@ -128,13 +128,14 @@ fn generate_micropython_bindings() {
             "-I../trezorhal",
             "-I../../build/firmware",
             "-I../../vendor/micropython",
+            "-I../../vendor/lvgl_mp",
             "-I../../vendor/micropython/lib/stm32lib/STM32F4xx_HAL_Driver/Inc",
             "-I../../vendor/micropython/lib/stm32lib/CMSIS/STM32F4xx/Include",
             "-I../../vendor/micropython/lib/cmsis/inc",
             "-DTREZOR_MODEL=T",
-            "-DSTM32F405xx",
+            "-DSTM32H747xx",
             "-DUSE_HAL_DRIVER",
-            "-DSTM32_HAL_H=<stm32f4xx.h>",
+            "-DSTM32_HAL_H=<stm32h7xx.h>",
         ]);
         // Append gcc-arm-none-eabi's include paths.
         let cc_output = Command::new("arm-none-eabi-gcc")
@@ -161,6 +162,7 @@ fn generate_micropython_bindings() {
             "-I../unix",
             "-I../../build/unix",
             "-I../../vendor/micropython",
+            "-I../../vendor/lvgl_mp",
         ]);
     }
 

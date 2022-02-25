@@ -66,12 +66,16 @@ def schedule(
 
     If `reschedule` is set, updates an existing entry.
     """
+    # log.debug(__name__, "schedule")
+    # log.debug(__name__, "schedule task %s",task)
+    # print(deadline)
     if reschedule:
         _queue.discard(task)
     if deadline is None:
         deadline = utime.ticks_ms()
     if finalizer is not None:
         _finalizers[id(task)] = finalizer
+    # log.debug(__name__, "push task in queue %s",task)
     _queue.push(deadline, task, value)
 
 
@@ -113,6 +117,7 @@ def run() -> None:
     Tasks yield back to the scheduler on any I/O, usually by calling `await` on
     a `Syscall`.
     """
+    log.debug(__name__, "run")
     task_entry = [0, 0, 0]  # deadline, task, value
     msg_entry = [0, 0]  # iface | flags, value
     while _queue or _paused:
@@ -133,18 +138,25 @@ def run() -> None:
         # compute the maximum amount of time we can wait for a message
         if _queue:
             delay = utime.ticks_diff(_queue.peektime(), utime.ticks_ms())
+            # log.debug(__name__, "queue poll %d",delay)
         else:
             delay = 1000  # wait for 1 sec maximum if queue is empty
+            log.debug(__name__, "default queue poll %d",delay)
 
         if io.poll(_paused, msg_entry, delay):
             # message received, run tasks paused on the interface
             msg_tasks = _paused.pop(msg_entry[0], ())
+            #log.debug(__name__, "msg_tasks %s",msg_tasks)
             for task in msg_tasks:
+                # log.debug(__name__, "run task %s",task)
+                # log.debug(__name__, "msg_entry %s",msg_entry[1])
                 _step(task, msg_entry[1])
         else:
             # timeout occurred, run the first scheduled task
             if _queue:
                 _queue.pop(task_entry)
+                # log.debug(__name__, "task_entry1 %s",task_entry[1])
+                # log.debug(__name__, "task_entry2 %s",task_entry[2])
                 _step(task_entry[1], task_entry[2])  # type: ignore
                 # error: Argument 1 to "_step" has incompatible type "int"; expected "Coroutine[Any, Any, Any]"
                 # rationale: We use untyped lists here, because that is what the C API supports.
@@ -177,6 +189,9 @@ def _step(task: Task, value: Any) -> None:
     """
     global this_task
     this_task = task
+    # log.debug(__name__, "step")
+    # log.debug(__name__, "task %s",task)
+    # log.debug(__name__, "value %s",value)
     try:
         if isinstance(value, BaseException):
             result = task.throw(value)
@@ -291,6 +306,7 @@ class race(Syscall):
     """
 
     def __init__(self, *children: Awaitable, exit_others: bool = True) -> None:
+        # log.debug(__name__, "loop race init")
         self.children = children
         self.exit_others = exit_others
         self.finished: list[Awaitable] = []  # children that finished
@@ -303,6 +319,8 @@ class race(Syscall):
         finalizer = self._finish
         scheduled = self.scheduled
         finished = self.finished
+
+        # log.debug(__name__, "loop race handle")
 
         self.callback = task
         scheduled.clear()
@@ -318,11 +336,13 @@ class race(Syscall):
             # TODO: document the types here
 
     def exit(self, except_for: Task | None = None) -> None:
+        log.debug(__name__, "loop race exit")
         for task in self.scheduled:
             if task != except_for:
                 close(task)
 
     def _finish(self, task: Task, result: Any) -> None:
+        log.debug(__name__, "loop race _finish")
         if not self.finished:
             # because we create tasks for children that are not generators yet,
             # we need to find the child value that the caller supplied
@@ -336,6 +356,7 @@ class race(Syscall):
             schedule(self.callback, result)
 
     def __iter__(self) -> Task:  # type: ignore
+        log.debug(__name__, "loop race __iter__")
         try:
             return (yield self)
         except:  # noqa: E722

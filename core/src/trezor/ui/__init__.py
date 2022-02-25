@@ -4,7 +4,8 @@ import utime
 from micropython import const
 from trezorui import Display
 
-from trezor import io, loop, res, utils, workflow
+from trezor import io, loop, res, utils, workflow, log
+import lvgl as lv
 
 if False:
     from typing import Any, Awaitable, Generator, TypeVar
@@ -281,7 +282,7 @@ class Component:
         def on_button_released(self, button_number: int) -> None:
             pass
 
-    def on_render(self) -> None:
+    def on_render(self) -> None:        
         pass
 
     if __debug__:
@@ -344,6 +345,7 @@ class Layout(Component):
             # we close it with the Cancelled exception, and wait until it is
             # closed, just to be sure.
             if layout_chan.takers:
+                log.debug(__name__, "layout_chan put canceled")
                 await layout_chan.put(Cancelled())
             # Now, no other layout should be running.  In a loop, we create new
             # layout tasks and execute them in parallel, while waiting on the
@@ -351,13 +353,16 @@ class Layout(Component):
             # layout tasks to trigger restart by exiting (new tasks are created
             # and we continue, because we are in a loop).
             while True:
+                log.debug(__name__, "loop race start")
                 await loop.race(layout_chan.take(), *self.create_tasks())
+                log.debug(__name__, "loop race end")
         except Result as result:
             # Result exception was raised, this means this layout is complete.
             value = result.value
         return value
 
     def __await__(self) -> Generator[Any, Any, ResultValue]:
+        log.debug(__name__, "ui __await__")
         return self.__iter__()  # type: ignore
 
     def create_tasks(self) -> tuple[loop.Task, ...]:
@@ -427,11 +432,13 @@ class Layout(Component):
         self._before_render()
         sleep = self.RENDER_SLEEP
         while True:
+            lv.tick_inc(10)            
             # Wait for a couple of ms and render the layout again.  Because
             # components use re-paint marking, they do not really draw on the
             # display needlessly.  Using `yield` instead of `await` to avoid allocations.
             # TODO: remove the busy loop
-            yield sleep
+            yield loop.sleep(10)
+            lv.timer_handler()
             self.dispatch(RENDER, 0, 0)
 
 

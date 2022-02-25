@@ -1,4 +1,4 @@
-from trezor import loop, ui, wire
+from trezor import loop, ui, wire, log
 
 if False:
     from typing import Callable, Any, Awaitable, TypeVar
@@ -18,6 +18,7 @@ def is_confirmed(x: Any) -> bool:
 
 async def raise_if_cancelled(a: Awaitable[T], exc: Any = wire.ActionCancelled) -> T:
     result = await a
+    log.debug(__name__, "raise respone %s",result)
     if result is CANCELLED:
         raise exc
     return result

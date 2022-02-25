@@ -10,6 +10,9 @@
 import trezor
 # trezor.utils import only C modules
 from trezor import utils
+from trezor import log
+import utime
+log.debug(__name__, "main.py")
 # we need space for 30 items in the trezor module
 utils.presize_module("trezor", 30)
 
@@ -35,6 +38,33 @@ import trezor.pin  # noqa: F401
 # === Prepare the USB interfaces first. Do not connect to the host yet.
 # usb imports trezor.utils and trezor.io which is a C module
 import usb
+
+from trezorui import Display
+
+# all rendering is done through a singleton of `Display`
+display = Display()
+
+import lvgl as lv
+import lvgldrv as lcd
+lv.init()
+
+disp_buf1 = lv.disp_draw_buf_t()
+# buf1_1 = bytearray(480*800)
+buf1_1 = lcd.framebuffer(1)
+disp_buf1.init(buf1_1, None, len(buf1_1) // lv.color_t.__SIZE__)
+disp_drv = lv.disp_drv_t()
+disp_drv.init()
+disp_drv.draw_buf = disp_buf1
+disp_drv.flush_cb = lcd.flush
+disp_drv.hor_res = 480
+disp_drv.ver_res = 800
+disp_drv.register()
+
+indev_drv = lv.indev_drv_t()
+indev_drv.init()
+indev_drv.type = lv.INDEV_TYPE.POINTER
+indev_drv.read_cb = lcd.ts_read
+indev_drv.register()
 
 # create an unimport manager that will be reused in the main loop
 unimport_manager = utils.unimport()

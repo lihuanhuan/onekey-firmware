@@ -61,6 +61,7 @@ def spawn(workflow: loop.Task) -> loop.spawn:
     Creates an instance of loop.spawn for the workflow and registers it into the
     workflow management system.
     """
+    log.debug(__name__, "spawn task")
     task = loop.spawn(workflow)
     _on_start(task)
     task.set_finalizer(_on_close)
@@ -176,6 +177,7 @@ class IdleTimer:
         callback()
 
     def touch(self) -> None:
+        log.debug(__name__, "idle timer touch.")
         """Wake up the idle timer.
 
         Events that represent some form of activity (USB messages, touches, etc.) should
@@ -185,9 +187,13 @@ class IdleTimer:
         for callback, task in self.tasks.items():
             timeout_us = self.timeouts[callback]
             deadline = utime.ticks_add(utime.ticks_ms(), timeout_us)
+            # log.debug(__name__, "task deadlin %d",deadline)
+            # print(task)
+            # print(callback)
             loop.schedule(task, None, deadline, reschedule=True)
 
     def set(self, timeout_ms: int, callback: IdleCallback) -> None:
+        log.debug(__name__, "idle timer set.")
         """Add or update an idle callback.
 
         Every time `timeout_ms` milliseconds elapse after the last registered activity,
@@ -215,6 +221,7 @@ class IdleTimer:
         self.touch()
 
     def remove(self, callback: IdleCallback) -> None:
+        log.debug(__name__, "idle timer remove.")
         """Remove an idle callback."""
         self.timeouts.pop(callback, None)
         task = self.tasks.pop(callback, None)
@@ -223,4 +230,5 @@ class IdleTimer:
 
 
 idle_timer = IdleTimer()
+log.debug(__name__, "Global idle timer.")
 """Global idle timer."""

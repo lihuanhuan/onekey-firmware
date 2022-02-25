@@ -23,6 +23,8 @@
 #include "display.h"
 #include "embed/extmod/trezorobj.h"
 
+#include "lvgl.h"
+
 #define BUTTON_IFACE (254)
 #define TOUCH_IFACE (255)
 #define POLL_READ (0x0000)
@@ -68,7 +70,7 @@ STATIC mp_obj_t mod_trezorio_poll(mp_obj_t ifaces, mp_obj_t list_ref,
       }
 #if TREZOR_MODEL == T
       else if (iface == TOUCH_IFACE) {
-        const uint32_t evt = touch_read();
+        const uint32_t evt = 0;//touch_read();
         if (evt) {
           mp_obj_tuple_t *tuple = MP_OBJ_TO_PTR(mp_obj_new_tuple(3, NULL));
           const uint32_t etype = (evt >> 24) & 0xFFU;  // event type

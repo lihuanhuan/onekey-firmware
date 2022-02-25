@@ -202,12 +202,18 @@ trezor.ui.layouts.tt.reset
 import trezor.ui.layouts.tt.reset
 trezor.ui.loader
 import trezor.ui.loader
+trezor.ui.lvgl_ui
+import trezor.ui.lvgl_ui
 trezor.ui.popup
 import trezor.ui.popup
 trezor.ui.qr
 import trezor.ui.qr
 trezor.ui.style
 import trezor.ui.style
+trezor.ui.ui
+import trezor.ui.ui
+trezor.ui.ui_images
+import trezor.ui.ui_images
 trezor.utils
 import trezor.utils
 trezor.wire
